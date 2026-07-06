@@ -70,3 +70,27 @@ stages:
 
     - publish: '$(Build.ArtifactStagingDirectory)'
       artifact: drop
+
+- stage: 'Dev'
+  displayName: 'Deploy to the dev environment'
+  dependsOn: Build
+  condition:  succeeded()
+  jobs:
+  - deployment: Deploy
+    pool:
+      vmImage: 'ubuntu-22.04'
+    environment: dev
+    variables:
+    - group: Release
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: drop
+          - task: AzureWebApp@1
+            inputs:
+              azureSubscription: 'ME-MngEnvMCAP225388-mihayash-1(2b9cb41b-2f94-475a-bdfa-b4451c74fb40)'
+              appType: 'webAppLinux'
+              appName: 'tailspin-space-game-web-staging-25221'
+              package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip'
